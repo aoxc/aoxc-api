@@ -21,6 +21,8 @@ The service is intentionally lightweight and intended to be a foundation layer f
 - Basic HTTP security header middleware.
 - In-memory per-IP rate limiting.
 - Optional API key protection for developer endpoints.
+- Wallet challenge/verify authentication scaffold for application sessions.
+- Transaction policy-check endpoint scaffold for chain-operation guardrails.
 - Docker-based reproducible runtime.
 
 ## 3) Architecture Map
@@ -59,6 +61,10 @@ docker compose up --build
 - `GET /api/v1/user/profiles`
 - `GET /api/v1/developer/tools`
 - `GET /api/v1/developer/compatibility`
+- `POST /api/v1/auth/challenge`
+- `POST /api/v1/auth/verify`
+- `GET /api/v1/chain/status`
+- `POST /api/v1/chain/tx/policy-check`
 
 ## 6) Configuration
 

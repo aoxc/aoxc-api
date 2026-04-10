@@ -52,9 +52,20 @@ Use environment variables as the single source of runtime behavior.
 - `GET /api/v1/developer/tools`
 - `GET /api/v1/developer/compatibility`
 
+### Auth & chain security scaffold
+
+- `POST /api/v1/auth/challenge`
+- `POST /api/v1/auth/verify`
+- `GET /api/v1/chain/status`
+- `POST /api/v1/chain/tx/policy-check`
+
 When `REQUIRE_API_KEY=true`, developer routes require:
 
 - `x-api-key: <configured-secret>`
+
+When submitting transaction policy checks, send:
+
+- `Authorization: Bearer <session-token>`
 
 ---
 
