@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request
 
 from app.data import FEATURE_FLAGS, ROADMAP, SAMPLE_USERS
 from app.schemas import FeatureFlag, RoadmapMilestone, UserProfile
-from app.security import enforce_rate_limit, enforce_signed_request
+from app.security import enforce_rate_limit
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -16,7 +16,6 @@ def get_roadmap(request: Request) -> list[RoadmapMilestone]:
 @router.get("/profiles", response_model=list[UserProfile])
 def list_profiles(request: Request) -> list[UserProfile]:
     enforce_rate_limit(request)
-    enforce_signed_request(request)
     return SAMPLE_USERS
 
 
