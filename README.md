@@ -18,7 +18,7 @@ The service is intentionally lightweight and intended to be a foundation layer f
 
 - FastAPI application lifecycle with OpenAPI schema generation.
 - Structured response contracts through Pydantic models.
-- Basic HTTP security header middleware.
+- Basic HTTP security header middleware (including optional HSTS).
 - In-memory per-IP rate limiting.
 - Optional API key protection for developer endpoints.
 - Wallet challenge/verify authentication scaffold for application sessions.
@@ -77,6 +77,7 @@ Use environment variables for deployment configuration:
 - `REQUIRE_API_KEY`
 - `API_KEY`
 - `REQUESTS_PER_MINUTE`
+- `ENFORCE_HTTPS`
 
 ## 7) Experimental & Quantum Security Warning
 

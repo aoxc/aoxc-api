@@ -32,6 +32,7 @@ Use environment variables as the single source of runtime behavior.
 | `REQUIRE_API_KEY` | Enables API key auth on developer endpoints | Set `true` outside local-only development |
 | `API_KEY` | Shared key for protected developer routes | Store in secret manager; rotate periodically |
 | `REQUESTS_PER_MINUTE` | In-memory per-IP throttling threshold | Treat as temporary control; replace with distributed limiter |
+| `ENFORCE_HTTPS` | Enables Strict-Transport-Security header | Keep `true` in environments served over TLS |
 
 ---
 

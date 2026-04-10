@@ -44,8 +44,11 @@ class CompatibilityReport(BaseModel):
     notes: str
 
 
+ADDRESS_PATTERN = r"^0x[a-fA-F0-9]{4,128}$"
+
+
 class WalletChallengeRequest(BaseModel):
-    wallet_address: str = Field(min_length=4, max_length=128)
+    wallet_address: str = Field(min_length=6, max_length=130, pattern=ADDRESS_PATTERN)
 
 
 class WalletChallengeResponse(BaseModel):
@@ -56,7 +59,7 @@ class WalletChallengeResponse(BaseModel):
 
 
 class WalletVerifyRequest(BaseModel):
-    wallet_address: str = Field(min_length=4, max_length=128)
+    wallet_address: str = Field(min_length=6, max_length=130, pattern=ADDRESS_PATTERN)
     signature: str = Field(min_length=1)
 
 
@@ -75,8 +78,8 @@ class ChainStatusResponse(BaseModel):
 
 
 class TxPolicyCheckRequest(BaseModel):
-    from_address: str = Field(min_length=4, max_length=128)
-    to_address: str = Field(min_length=4, max_length=128)
+    from_address: str = Field(min_length=6, max_length=130, pattern=ADDRESS_PATTERN)
+    to_address: str = Field(min_length=6, max_length=130, pattern=ADDRESS_PATTERN)
     amount: float = Field(gt=0)
     asset: str = Field(default="AOXC")
 
