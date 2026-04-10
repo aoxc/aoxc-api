@@ -1,46 +1,79 @@
 from __future__ import annotations
 
-import hmac
+import secrets
+import time
 from dataclasses import dataclass
 
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, status
 
-from app.config import settings
-
-
-@dataclass(frozen=True)
-class ApiPrincipal:
-    key_id: str
-    scopes: frozenset[str]
+CHALLENGE_TTL_SECONDS = 300
+SESSION_TTL_SECONDS = 3600
 
 
-# Production'da bu map secret manager / DB'den gelmelidir.
-API_KEYS: dict[str, tuple[str, frozenset[str]]] = {
-    "dev-root": (settings.api_key, frozenset({"developer:read", "developer:write", "user:read"})),
-}
+@dataclass
+class WalletChallenge:
+    wallet_address: str
+    nonce: str
+    expires_at: float
 
 
-def _safe_compare(left: str, right: str) -> bool:
-    return hmac.compare_digest(left.encode("utf-8"), right.encode("utf-8"))
+@dataclass
+class SessionToken:
+    wallet_address: str
+    token: str
+    expires_at: float
 
 
-def authenticate_api_key(request: Request) -> ApiPrincipal:
-    if not settings.require_api_key:
-        return ApiPrincipal(key_id="anonymous", scopes=frozenset({"developer:read", "user:read"}))
-
-    key_id = request.headers.get("x-key-id", "")
-    provided = request.headers.get("x-api-key", "")
-
-    if not key_id or not provided or key_id not in API_KEYS:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid API credentials")
-
-    expected_secret, scopes = API_KEYS[key_id]
-    if not _safe_compare(provided, expected_secret):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API credentials")
-
-    return ApiPrincipal(key_id=key_id, scopes=scopes)
+_challenges: dict[str, WalletChallenge] = {}
+_sessions: dict[str, SessionToken] = {}
 
 
-def require_scope(principal: ApiPrincipal, required_scope: str) -> None:
-    if required_scope not in principal.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Missing required scope: {required_scope}")
+def create_wallet_challenge(wallet_address: str) -> WalletChallenge:
+    nonce = secrets.token_urlsafe(24)
+    challenge = WalletChallenge(
+        wallet_address=wallet_address,
+        nonce=nonce,
+        expires_at=time.time() + CHALLENGE_TTL_SECONDS,
+    )
+    _challenges[wallet_address] = challenge
+    return challenge
+
+
+def verify_wallet_challenge(wallet_address: str, signature: str) -> SessionToken:
+    challenge = _challenges.get(wallet_address)
+    if challenge is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No active challenge for wallet.")
+
+    if time.time() > challenge.expires_at:
+        _challenges.pop(wallet_address, None)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Challenge has expired.")
+
+    # Scaffold behavior: signature parsing/validation will be replaced by chain-native verification.
+    if not signature.strip():
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid signature payload.")
+
+    _challenges.pop(wallet_address, None)
+    token = secrets.token_urlsafe(32)
+    session = SessionToken(
+        wallet_address=wallet_address,
+        token=token,
+        expires_at=time.time() + SESSION_TTL_SECONDS,
+    )
+    _sessions[token] = session
+    return session
+
+
+def enforce_session_token(authorization: str | None) -> SessionToken:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token.")
+
+    token = authorization.removeprefix("Bearer ").strip()
+    session = _sessions.get(token)
+    if session is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token.")
+
+    if time.time() > session.expires_at:
+        _sessions.pop(token, None)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired.")
+
+    return session

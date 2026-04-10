@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.middleware import SecurityHeadersMiddleware
-from app.routers import developer, user
+from app.routers import auth, chain, developer, user
 from app.schemas import HealthResponse
 
 app = FastAPI(
@@ -26,6 +26,8 @@ app.add_middleware(
 
 app.include_router(user.router, prefix="/api/v1")
 app.include_router(developer.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(chain.router, prefix="/api/v1")
 
 
 @app.get("/health", response_model=HealthResponse, tags=["system"])

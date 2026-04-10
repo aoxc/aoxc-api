@@ -42,3 +42,47 @@ class CompatibilityReport(BaseModel):
     compatible: bool
     supported_standards: list[str]
     notes: str
+
+
+class WalletChallengeRequest(BaseModel):
+    wallet_address: str = Field(min_length=4, max_length=128)
+
+
+class WalletChallengeResponse(BaseModel):
+    wallet_address: str
+    nonce: str
+    message: str
+    expires_in_seconds: int
+
+
+class WalletVerifyRequest(BaseModel):
+    wallet_address: str = Field(min_length=4, max_length=128)
+    signature: str = Field(min_length=1)
+
+
+class SessionTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = Field(default="Bearer")
+    expires_in_seconds: int
+    wallet_address: str
+
+
+class ChainStatusResponse(BaseModel):
+    network: str
+    rpc_status: str
+    finality_target_blocks: int
+    policy_mode: str
+
+
+class TxPolicyCheckRequest(BaseModel):
+    from_address: str = Field(min_length=4, max_length=128)
+    to_address: str = Field(min_length=4, max_length=128)
+    amount: float = Field(gt=0)
+    asset: str = Field(default="AOXC")
+
+
+class TxPolicyCheckResponse(BaseModel):
+    allowed: bool
+    risk_level: str
+    reasons: list[str]
+    required_controls: list[str]
