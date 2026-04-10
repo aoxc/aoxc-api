@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from fastapi import Request
+
+from app.config import settings
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
@@ -13,5 +15,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "same-origin"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none';"
+        if settings.enforce_https:
+            response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
         response.headers["X-AOXC-Status"] = "experimental"
         return response

@@ -36,3 +36,20 @@ def test_security_headers_exist() -> None:
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["x-aoxc-status"] == "experimental"
+
+
+def test_cors_preflight_supports_post_routes() -> None:
+    response = client.options(
+        "/api/v1/auth/challenge",
+        headers={
+            "Origin": "http://localhost",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert response.status_code == 200
+    assert "POST" in response.headers.get("access-control-allow-methods", "")
+
+
+def test_hsts_header_present_by_default() -> None:
+    response = client.get("/health")
+    assert "strict-transport-security" in response.headers

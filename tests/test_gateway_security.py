@@ -6,15 +6,15 @@ client = TestClient(app)
 
 
 def test_auth_challenge_and_verify_issue_session_token() -> None:
-    challenge_response = client.post("/api/v1/auth/challenge", json={"wallet_address": "0xA0XC123"})
+    challenge_response = client.post("/api/v1/auth/challenge", json={"wallet_address": "0xA0aB1234"})
     assert challenge_response.status_code == 200
     challenge_data = challenge_response.json()
-    assert challenge_data["wallet_address"] == "0xA0XC123"
+    assert challenge_data["wallet_address"] == "0xA0aB1234"
     assert challenge_data["nonce"]
 
     verify_response = client.post(
         "/api/v1/auth/verify",
-        json={"wallet_address": "0xA0XC123", "signature": "signed_payload"},
+        json={"wallet_address": "0xA0aB1234", "signature": "signed_payload"},
     )
     assert verify_response.status_code == 200
     verify_data = verify_response.json()
@@ -36,18 +36,18 @@ def test_chain_policy_check_requires_session_token() -> None:
 
 
 def test_chain_policy_check_accepts_valid_token() -> None:
-    client.post("/api/v1/auth/challenge", json={"wallet_address": "0xA0XC777"})
+    client.post("/api/v1/auth/challenge", json={"wallet_address": "0xA0aB7777"})
     verify_response = client.post(
         "/api/v1/auth/verify",
-        json={"wallet_address": "0xA0XC777", "signature": "ok"},
+        json={"wallet_address": "0xA0aB7777", "signature": "ok"},
     )
     token = verify_response.json()["access_token"]
 
     response = client.post(
         "/api/v1/chain/tx/policy-check",
         json={
-            "from_address": "0xA0XC777",
-            "to_address": "0xA0XC888",
+            "from_address": "0xA0aB7777",
+            "to_address": "0xA0aB8888",
             "amount": 25.0,
             "asset": "AOXC",
         },
@@ -57,3 +57,8 @@ def test_chain_policy_check_accepts_valid_token() -> None:
     data = response.json()
     assert data["allowed"] is True
     assert data["risk_level"] in {"low", "medium", "high"}
+
+
+def test_wallet_address_validation_rejects_invalid_format() -> None:
+    response = client.post("/api/v1/auth/challenge", json={"wallet_address": "alice"})
+    assert response.status_code == 422

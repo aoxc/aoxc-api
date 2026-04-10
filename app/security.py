@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
+import hmac
 from time import time
 
 from fastapi import HTTPException, Request, status
@@ -39,7 +40,7 @@ def enforce_developer_api_key(request: Request) -> None:
         )
 
     provided = request.headers.get("x-api-key", "")
-    if provided != settings.api_key:
+    if not hmac.compare_digest(provided, settings.api_key):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API key for developer endpoints.",
