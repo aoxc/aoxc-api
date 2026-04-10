@@ -14,7 +14,7 @@ class ApiPrincipal:
     scopes: frozenset[str]
 
 
-# In production, this map should be backed by a secret manager or a secure key store.
+# Production'da bu map secret manager / DB'den gelmelidir.
 API_KEYS: dict[str, tuple[str, frozenset[str]]] = {
     "dev-root": (settings.api_key, frozenset({"developer:read", "developer:write", "user:read"})),
 }

@@ -8,7 +8,6 @@ class HealthResponse(BaseModel):
     service: str
     version: str
     environment: str
-    experimental: bool
 
 
 class UserProfile(BaseModel):

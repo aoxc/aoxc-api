@@ -3,38 +3,38 @@ from app.schemas import CompatibilityReport, DeveloperTool, FeatureFlag, Roadmap
 ROADMAP: list[RoadmapMilestone] = [
     RoadmapMilestone(
         year="2025",
-        focus="Launch and Global Community Genesis",
+        focus="Launch & Global Community Genesis",
         targets=[
-            "Layer 0 testnet and pilot XWallet",
-            "Whitepaper, tokenomics baseline, and initial DAO framework",
-            "Foundational global community expansion campaign",
+            "Layer 0 testnet ve test XWallet",
+            "Whitepaper, tokenomics ve ilk DAO framework",
+            "10 milyon kurucu hareketi",
         ],
     ),
     RoadmapMilestone(
         year="2026",
-        focus="Ecosystem Expansion and Real-World Use Cases",
+        focus="Ecosystem Expansion & Real-World Use Cases",
         targets=[
-            "No-code chain creation interfaces",
-            "Full DAO governance and reputation-driven participation",
-            "Community-led Layer 1 ecosystem growth",
+            "No-code blockchain olusturma araclari",
+            "Tam DAO yonetimi ve itibar bazli katki",
+            "1000+ topluluk odakli Layer 1 zinciri",
         ],
     ),
     RoadmapMilestone(
         year="2027",
-        focus="Mainnet Launch and Progressive Decentralization",
+        focus="Mainnet Launch & Full Decentralization",
         targets=[
-            "Layer 0 mainnet launch",
-            "AI-assisted collective intelligence workflows for DAO governance",
-            "Pilot integrations for public-sector service workflows",
+            "Layer 0 Mainnet",
+            "AI + DAO kolektif zeka motoru",
+            "Kamu hizmetlerinde pilot entegrasyon",
         ],
     ),
     RoadmapMilestone(
         year="2028",
-        focus="Global Adoption and Daily Utility",
+        focus="Global Adoption & Daily Use",
         targets=[
-            "Low-connectivity synchronization pathways",
-            "Social + wallet + dApp unified hub experience",
-            "Mass-adoption scaling objectives",
+            "Dusuk baglantida offline sync",
+            "Sosyal + cuzdan + DApp hub",
+            "1 milyar kullanici hedefi",
         ],
     ),
 ]
@@ -44,19 +44,19 @@ FEATURE_FLAGS: list[FeatureFlag] = [
         key="socialfi.profile_v2",
         enabled=True,
         rollout_stage="beta",
-        description="Reputation scoring and social graph API capabilities.",
+        description="Topluluk itibar skorlamasi ve sosyal graph endpointleri",
     ),
     FeatureFlag(
         key="dao.governance",
         enabled=True,
         rollout_stage="general-availability",
-        description="Proposal lifecycle, voting, and delegation API workflows.",
+        description="DAO proposal, oylama ve delege endpointleri",
     ),
     FeatureFlag(
         key="wallet.offline_sync",
         enabled=False,
         rollout_stage="planned",
-        description="Wallet synchronization support for constrained connectivity environments.",
+        description="Dusuk baglanti kosullarinda cuzdan esitlemesi",
     ),
 ]
 
@@ -64,17 +64,17 @@ DEVELOPER_TOOLS: list[DeveloperTool] = [
     DeveloperTool(
         name="No-code chain builder API",
         status="planned",
-        description="Provisioning workflows for community-operated Layer 1 networks.",
+        description="Topluluklarin kendi Layer1 aglarini API ile olusturmasi",
     ),
     DeveloperTool(
         name="DAO governance SDK",
         status="active",
-        description="Programmatic proposal creation, voting, and result retrieval.",
+        description="Teklif olusturma, oy verme ve sonuclari sorgulama",
     ),
     DeveloperTool(
-        name="Identity and reputation service",
+        name="Identity & reputation service",
         status="active",
-        description="Identity verification, contribution history, and reputation scoring APIs.",
+        description="Kullanici puanlama, kimlik dogrulama ve katkı gecmisi",
     ),
 ]
 
@@ -87,5 +87,5 @@ COMPATIBILITY = CompatibilityReport(
     network="AOXChain",
     compatible=True,
     supported_standards=["EVM JSON-RPC", "DAO Governance API", "Wallet Sync v1"],
-    notes="Roadmap-driven capabilities are enabled progressively by release phase.",
+    notes="Roadmap odakli ozellikler asamali olarak aktiflestirilir.",
 )

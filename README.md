@@ -1,60 +1,32 @@
-# AOXC API (Experimental)
+# aoxc-api
 
-AOXC API is an **experimental**, security-focused FastAPI service intended for AOXChain/XChain-compatible integrations.
+AOXChain/XChain yol haritasina uyumlu, **kullanici** ve **gelistirici** odakli bir REST API.
 
-## Important Notice
+> Bu proje **Python (FastAPI)** ile yazildi. NPM/Node degil.
 
-This repository is a **pre-production experimental reference implementation**. It is not intended to be used as-is for high-value or regulated production environments without additional controls, external audits, and operational hardening.
+## Neden Python/FastAPI?
 
-- **Do not assume enterprise-grade guarantees** from this codebase alone.
-- **Do not rely on this service as a sole security boundary**.
-- **Treat all cryptographic and auth configurations as environment-specific responsibilities**.
+- Hizli API gelistirme ve tip guvenli contract (Pydantic)
+- OpenAPI/Swagger dokumantasyonu otomatik uretilir
+- Docker ile her makinede ayni calisma ortami
 
-## Purpose
+## Mimari
 
-The project provides:
+- `app/main.py`: app bootstrap, CORS, security headers, router baglama
+- `app/config.py`: tum runtime ayarlari (`ENV` tabanli)
+- `app/security.py`: rate limit + developer endpoint API key kontrolu
+- `app/routers/user.py`: son kullanici endpointleri
+- `app/routers/developer.py`: gelistirici endpointleri
+- `app/data.py`: AOXChain roadmap ve ornek payloadlar
 
-1. A versioned REST API surface for **user** and **developer** domains.
-2. A hardened baseline for API security (signed requests, API keys, scope checks, anti-replay, rate limiting, security headers).
-3. A containerized developer experience for reproducible local deployment.
-4. An AOXChain-oriented roadmap data contract for prototyping integrations.
+## Guvenlik ozellikleri
 
-## Scope and Non-Goals
+- `X-Content-Type-Options`, `X-Frame-Options`, `CSP` gibi temel HTTP security header'lari
+- Basit IP bazli rate limiting (dakika bazli)
+- Gelistirici endpointleri icin opsiyonel `x-api-key` zorunlulugu
+- CORS kontrolu (`ALLOWED_ORIGINS`)
 
-### In Scope
-- REST endpoints for roadmap, features, sample profiles, developer tools, and compatibility status.
-- Request integrity controls (signature validation, timestamp freshness, nonce replay protection).
-- API key + scope authorization model.
-- Operational defaults through environment-driven settings.
-
-### Explicit Non-Goals
-- Formal post-quantum cryptographic assurances.
-- Turnkey zero-trust platform implementation.
-- Compliance certifications (SOC 2, ISO 27001, PCI DSS, etc.).
-
-## Architecture Overview
-
-- `app/main.py`: application assembly, middleware, routing, health endpoint.
-- `app/config.py`: runtime settings and feature toggles via environment variables.
-- `app/security.py`: rate limiting, anti-replay, request signature enforcement.
-- `app/auth.py`: API key authentication and RBAC-style scope enforcement.
-- `app/crypto.py`: signature verification abstraction (currently HMAC-SHA256).
-- `app/routers/`: user and developer endpoint modules.
-- `app/data.py`: AOXChain-compatible sample payloads and roadmap milestones.
-
-For full architecture and operational guidance, see `docs/USAGE.md`.
-
-## Security Model (Baseline)
-
-- HTTP hardening headers (CSP, HSTS, X-Frame-Options, etc.).
-- Signed requests with timestamp and nonce.
-- Replay detection via nonce cache.
-- API key identity + scope checks.
-- Per-IP rate limiting.
-
-## Quick Start
-
-### Local
+## Kurulum (lokal)
 
 ```bash
 python -m venv .venv
@@ -63,27 +35,33 @@ pip install -e .[dev]
 make run
 ```
 
-### Docker
+## Docker ile (onerilen)
 
 ```bash
 docker compose up --build
 ```
 
-## Endpoints
+Bu sekilde Python surumu fark etmeksizin her makinede ayni imajla calisir.
+
+## Endpointler
 
 - `GET /health`
 - `GET /api/v1/user/roadmap`
 - `GET /api/v1/user/features`
-- `GET /api/v1/user/profiles` *(requires signed request)*
-- `GET /api/v1/developer/tools` *(requires signed request + API credentials + scope)*
-- `GET /api/v1/developer/compatibility` *(requires signed request + API credentials + scope)*
+- `GET /api/v1/user/profiles`
+- `GET /api/v1/developer/tools`
+- `GET /api/v1/developer/compatibility`
 
-## Testing
+## Ortam degiskenleri
+
+`.env.example` dosyasini referans alin:
+
+- `APP_ENV=dev|staging|prod`
+- `REQUIRE_API_KEY=true` yaparsaniz developer endpointleri API key ister
+- `REQUESTS_PER_MINUTE` ile rate limit ayarlanir
+
+## Test
 
 ```bash
 make test
 ```
-
-## License
-
-See `LICENSE`.

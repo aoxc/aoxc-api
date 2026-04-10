@@ -2,21 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.middleware import RequestContextMiddleware, SecurityHeadersMiddleware
+from app.middleware import SecurityHeadersMiddleware
 from app.routers import developer, user
 from app.schemas import HealthResponse
-
-is_prod = settings.app_env.lower() == "prod"
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="AOXChain-compatible user and developer API service",
-    docs_url=None if is_prod else "/docs",
-    redoc_url=None if is_prod else "/redoc",
+    description="AOXChain uyumlu kullanici ve gelistirici API servisi",
 )
 
-app.add_middleware(RequestContextMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -36,5 +31,4 @@ def health() -> HealthResponse:
         service="aoxc-api",
         version=app.version,
         environment=settings.app_env,
-        experimental=settings.experimental_mode,
     )
