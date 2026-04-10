@@ -5,18 +5,18 @@ ROADMAP: list[RoadmapMilestone] = [
         year="2025",
         focus="Launch & Global Community Genesis",
         targets=[
-            "Layer 0 testnet ve test XWallet",
-            "Whitepaper, tokenomics ve ilk DAO framework",
-            "10 milyon kurucu hareketi",
+            "Layer 0 testnet and XWallet test release",
+            "Whitepaper, tokenomics, and first DAO framework",
+            "10 million founding movement",
         ],
     ),
     RoadmapMilestone(
         year="2026",
         focus="Ecosystem Expansion & Real-World Use Cases",
         targets=[
-            "No-code blockchain olusturma araclari",
-            "Tam DAO yonetimi ve itibar bazli katki",
-            "1000+ topluluk odakli Layer 1 zinciri",
+            "No-code blockchain creation tools",
+            "Full DAO governance and reputation-based contributions",
+            "1000+ community-driven Layer 1 chains",
         ],
     ),
     RoadmapMilestone(
@@ -24,17 +24,17 @@ ROADMAP: list[RoadmapMilestone] = [
         focus="Mainnet Launch & Full Decentralization",
         targets=[
             "Layer 0 Mainnet",
-            "AI + DAO kolektif zeka motoru",
-            "Kamu hizmetlerinde pilot entegrasyon",
+            "AI + DAO collective intelligence engine",
+            "Pilot integrations in public services",
         ],
     ),
     RoadmapMilestone(
         year="2028",
         focus="Global Adoption & Daily Use",
         targets=[
-            "Dusuk baglantida offline sync",
-            "Sosyal + cuzdan + DApp hub",
-            "1 milyar kullanici hedefi",
+            "Offline sync in low-connectivity environments",
+            "Social + wallet + DApp hub",
+            "1 billion user target",
         ],
     ),
 ]
@@ -44,19 +44,19 @@ FEATURE_FLAGS: list[FeatureFlag] = [
         key="socialfi.profile_v2",
         enabled=True,
         rollout_stage="beta",
-        description="Topluluk itibar skorlamasi ve sosyal graph endpointleri",
+        description="Community reputation scoring and social graph endpoints",
     ),
     FeatureFlag(
         key="dao.governance",
         enabled=True,
         rollout_stage="general-availability",
-        description="DAO proposal, oylama ve delege endpointleri",
+        description="DAO proposal, voting, and delegate endpoints",
     ),
     FeatureFlag(
         key="wallet.offline_sync",
         enabled=False,
         rollout_stage="planned",
-        description="Dusuk baglanti kosullarinda cuzdan esitlemesi",
+        description="Wallet synchronization in low-connectivity conditions",
     ),
 ]
 
@@ -64,17 +64,17 @@ DEVELOPER_TOOLS: list[DeveloperTool] = [
     DeveloperTool(
         name="No-code chain builder API",
         status="planned",
-        description="Topluluklarin kendi Layer1 aglarini API ile olusturmasi",
+        description="API tooling for communities to build their own Layer 1 networks",
     ),
     DeveloperTool(
         name="DAO governance SDK",
         status="active",
-        description="Teklif olusturma, oy verme ve sonuclari sorgulama",
+        description="Create proposals, vote, and query governance outcomes",
     ),
     DeveloperTool(
         name="Identity & reputation service",
         status="active",
-        description="Kullanici puanlama, kimlik dogrulama ve katkı gecmisi",
+        description="User scoring, identity verification, and contribution history",
     ),
 ]
 
@@ -87,5 +87,5 @@ COMPATIBILITY = CompatibilityReport(
     network="AOXChain",
     compatible=True,
     supported_standards=["EVM JSON-RPC", "DAO Governance API", "Wallet Sync v1"],
-    notes="Roadmap odakli ozellikler asamali olarak aktiflestirilir.",
+    notes="Roadmap-focused features are enabled gradually.",
 )
