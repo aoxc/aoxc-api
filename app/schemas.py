@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -72,6 +74,7 @@ class SessionTokenResponse(BaseModel):
 
 class ChainStatusResponse(BaseModel):
     network: str
+    chain_id: str
     rpc_status: str
     finality_target_blocks: int
     policy_mode: str
@@ -89,3 +92,15 @@ class TxPolicyCheckResponse(BaseModel):
     risk_level: str
     reasons: list[str]
     required_controls: list[str]
+    policy_version: str
+
+
+class RpcProxyRequest(BaseModel):
+    method: str = Field(min_length=3, max_length=128)
+    params: list[Any] = Field(default_factory=list)
+
+
+class RpcProxyResponse(BaseModel):
+    method: str
+    result: Any
+    chain_id: str

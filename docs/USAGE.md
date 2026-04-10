@@ -42,6 +42,11 @@ Use environment variables as the single source of runtime behavior.
 | `REQUEST_SIGNING_KEY` | Shared HMAC key for tx request signatures | Store in KMS/secret manager and rotate |
 | `SIGNATURE_MAX_SKEW_SECONDS` | Max tolerated client/server clock drift | Keep low (e.g., 120-300s) and monitor rejects |
 | `SIGNATURE_NONCE_TTL_SECONDS` | Replay cache lifetime for used nonces | Tune to request latency + retry window |
+| `AOXC_RPC_URL` | AOXChain JSON-RPC endpoint URL | Required for `/api/v1/chain/rpc` and active chain probing |
+| `AOXC_CHAIN_ID` | Logical chain profile id | Keep environment-specific (`aoxc-testnet`, `aoxc-mainnet`) |
+| `AOXC_SUPPORTED_ASSETS` | Comma-separated allowlist for tx policy checks | Restrict to approved settlement assets |
+| `AOXC_MAX_TX_AMOUNT` | Maximum allowed tx amount for policy allow | Set risk-based hard ceiling |
+| `AOXC_ALLOWED_RPC_METHODS` | Comma-separated JSON-RPC method allowlist | Keep minimal; deny-by-default |
 
 ---
 
@@ -68,6 +73,7 @@ Use environment variables as the single source of runtime behavior.
 - `POST /api/v1/auth/verify`
 - `GET /api/v1/chain/status`
 - `POST /api/v1/chain/tx/policy-check`
+- `POST /api/v1/chain/rpc`
 
 When `REQUIRE_API_KEY=true`, developer routes require:
 

@@ -24,7 +24,7 @@ def temporary_security_settings(**kwargs):
 
 def _signed_headers(from_address: str, to_address: str, amount: float, asset: str, key: str) -> dict[str, str]:
     ts = str(int(time.time()))
-    nonce = "test-nonce-1"
+    nonce = f"test-nonce-{time.time_ns()}"
     canonical = f"{from_address.lower()}|{to_address.lower()}|{amount:.8f}|{asset.upper()}|{ts}|{nonce}"
     signature = RequestSignatureVerifier(key).create_signature(canonical)
     return {
@@ -85,6 +85,7 @@ def test_chain_policy_check_accepts_valid_token() -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["allowed"] is True
+    assert data["policy_version"] == "aoxc-policy-v2"
     assert data["risk_level"] in {"low", "medium", "high"}
 
 
@@ -187,3 +188,32 @@ def test_chain_policy_check_rejects_replay_nonce_when_enabled() -> None:
 
     assert first.status_code == 200
     assert second.status_code == 401
+
+
+def test_chain_policy_check_rejects_wallet_mismatch() -> None:
+    client.post("/api/v1/auth/challenge", json={"wallet_address": "0xA0aB9010"})
+    verify_response = client.post(
+        "/api/v1/auth/verify",
+        json={"wallet_address": "0xA0aB9010", "signature": "ok"},
+    )
+    token = verify_response.json()["access_token"]
+
+    response = client.post(
+        "/api/v1/chain/tx/policy-check",
+        json={
+            "from_address": "0xA0aBFFFF",
+            "to_address": "0xA0aB9011",
+            "amount": 1.0,
+            "asset": "AOXC",
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["allowed"] is False
+    assert data["risk_level"] == "high"
+
+
+def test_chain_rpc_requires_auth_token() -> None:
+    response = client.post("/api/v1/chain/rpc", json={"method": "eth_chainId", "params": []})
+    assert response.status_code == 401

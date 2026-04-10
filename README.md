@@ -72,6 +72,7 @@ docker compose up --build
 - `POST /api/v1/auth/verify`
 - `GET /api/v1/chain/status`
 - `POST /api/v1/chain/tx/policy-check`
+- `POST /api/v1/chain/rpc`
 
 ## 7) Configuration
 
