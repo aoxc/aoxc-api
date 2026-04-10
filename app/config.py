@@ -19,6 +19,12 @@ class Settings:
     api_key: str = os.getenv("API_KEY", "")
     requests_per_minute: int = int(os.getenv("REQUESTS_PER_MINUTE", "120"))
     enforce_https: bool = os.getenv("ENFORCE_HTTPS", "true").strip().lower() in _BOOL_TRUE_VALUES
+    require_request_signature: bool = (
+        os.getenv("REQUIRE_REQUEST_SIGNATURE", "false").strip().lower() in _BOOL_TRUE_VALUES
+    )
+    request_signing_key: str = os.getenv("REQUEST_SIGNING_KEY", "")
+    signature_max_skew_seconds: int = int(os.getenv("SIGNATURE_MAX_SKEW_SECONDS", "300"))
+    signature_nonce_ttl_seconds: int = int(os.getenv("SIGNATURE_NONCE_TTL_SECONDS", "600"))
 
 
 settings = Settings()

@@ -33,6 +33,10 @@ Use environment variables as the single source of runtime behavior.
 | `API_KEY` | Shared key for protected developer routes | Store in secret manager; rotate periodically |
 | `REQUESTS_PER_MINUTE` | In-memory per-IP throttling threshold | Treat as temporary control; replace with distributed limiter |
 | `ENFORCE_HTTPS` | Enables Strict-Transport-Security header | Keep `true` in environments served over TLS |
+| `REQUIRE_REQUEST_SIGNATURE` | Enforces signed tx policy-check requests | Set `true` in staging/prod for anti-tamper + anti-replay |
+| `REQUEST_SIGNING_KEY` | Shared HMAC key for tx request signatures | Store in KMS/secret manager and rotate |
+| `SIGNATURE_MAX_SKEW_SECONDS` | Max tolerated client/server clock drift | Keep low (e.g., 120-300s) and monitor rejects |
+| `SIGNATURE_NONCE_TTL_SECONDS` | Replay cache lifetime for used nonces | Tune to request latency + retry window |
 
 ---
 
@@ -67,6 +71,13 @@ When `REQUIRE_API_KEY=true`, developer routes require:
 When submitting transaction policy checks, send:
 
 - `Authorization: Bearer <session-token>`
+
+If `REQUIRE_REQUEST_SIGNATURE=true`, also send:
+
+- `X-AOXC-Timestamp: <unix-seconds>`
+- `X-AOXC-Nonce: <unique-nonce>`
+- `X-AOXC-Signature: <hmac-sha256>` where signed string is:
+  `from_address|to_address|amount(8dp)|asset|timestamp|nonce`
 
 ---
 
