@@ -31,6 +31,16 @@ def test_developer_compatibility() -> None:
     assert data["compatible"] is True
 
 
+def test_developer_full_compatibility() -> None:
+    response = client.get("/api/v1/developer/compatibility/full")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["network"] == "AOXChain"
+    assert data["runtime"]["chain_id"] == "aoxc-1"
+    assert "eth_chainId" in data["sample_rpc_methods"]
+    assert len(data["capabilities"]) >= 4
+
+
 def test_security_headers_exist() -> None:
     response = client.get("/health")
     assert response.headers["x-content-type-options"] == "nosniff"

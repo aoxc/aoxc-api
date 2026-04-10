@@ -46,6 +46,31 @@ class CompatibilityReport(BaseModel):
     notes: str
 
 
+class CompatibilityCapability(BaseModel):
+    key: str
+    status: str
+    description: str
+
+
+class CompatibilityRuntime(BaseModel):
+    api_version: str
+    compatibility_version: str
+    chain_id: str
+    rpc_transport: str
+    signature_modes: list[str]
+
+
+class FullCompatibilityReport(BaseModel):
+    network: str
+    compatible: bool
+    runtime: CompatibilityRuntime
+    standards: list[str]
+    capabilities: list[CompatibilityCapability]
+    required_headers: list[str]
+    sample_rpc_methods: list[str]
+    notes: str
+
+
 ADDRESS_PATTERN = r"^0x[a-fA-F0-9]{4,128}$"
 
 
