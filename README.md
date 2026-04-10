@@ -78,6 +78,18 @@ Use environment variables for deployment configuration:
 - `API_KEY`
 - `REQUESTS_PER_MINUTE`
 - `ENFORCE_HTTPS`
+- `REQUIRE_REQUEST_SIGNATURE`
+- `REQUEST_SIGNING_KEY`
+- `SIGNATURE_MAX_SKEW_SECONDS`
+- `SIGNATURE_NONCE_TTL_SECONDS`
+
+
+For signed transaction policy requests (`REQUIRE_REQUEST_SIGNATURE=true`), clients must include:
+
+- `X-AOXC-Timestamp`: Unix epoch seconds
+- `X-AOXC-Nonce`: unique request nonce
+- `X-AOXC-Signature`: HMAC-SHA256 over
+  `from_address|to_address|amount(8dp)|asset|timestamp|nonce`
 
 ## 7) Experimental & Quantum Security Warning
 
