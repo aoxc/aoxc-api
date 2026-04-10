@@ -5,6 +5,7 @@ from app.config import settings
 from app.middleware import SecurityHeadersMiddleware
 from app.routers import auth, chain, developer, user
 from app.schemas import HealthResponse
+from app.security import validate_security_configuration
 
 app = FastAPI(
     title=settings.app_name,
@@ -28,6 +29,11 @@ app.include_router(user.router, prefix="/api/v1")
 app.include_router(developer.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(chain.router, prefix="/api/v1")
+
+
+@app.on_event("startup")
+def startup_validate_security_config() -> None:
+    validate_security_configuration()
 
 
 @app.get("/health", response_model=HealthResponse, tags=["system"])

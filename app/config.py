@@ -26,6 +26,21 @@ class Settings:
         os.getenv("REQUIRE_REQUEST_SIGNATURE", "false").strip().lower() in _BOOL_TRUE_VALUES
     )
     request_signing_key: str = os.getenv("REQUEST_SIGNING_KEY", "")
+    request_signing_key_id: str = os.getenv("REQUEST_SIGNING_KEY_ID", "sig-key-1").strip()
+    request_signing_pq_key: str = os.getenv("REQUEST_SIGNING_PQ_KEY", "")
+    request_signing_pq_key_id: str = os.getenv("REQUEST_SIGNING_PQ_KEY_ID", "pq-key-1").strip()
+    request_signature_primary_alg: str = os.getenv("REQUEST_SIGNATURE_PRIMARY_ALG", "hmac-sha256").strip().lower()
+    request_signature_allowed_algs: tuple[str, ...] = tuple(
+        alg.strip().lower()
+        for alg in os.getenv("REQUEST_SIGNATURE_ALLOWED_ALGS", "hmac-sha256,mock-pqc-dilithium2").split(",")
+        if alg.strip()
+    )
+    request_signature_require_hybrid: bool = (
+        os.getenv("REQUEST_SIGNATURE_REQUIRE_HYBRID", "false").strip().lower() in _BOOL_TRUE_VALUES
+    )
+    request_signature_require_key_id: bool = (
+        os.getenv("REQUEST_SIGNATURE_REQUIRE_KEY_ID", "false").strip().lower() in _BOOL_TRUE_VALUES
+    )
     signature_max_skew_seconds: int = int(os.getenv("SIGNATURE_MAX_SKEW_SECONDS", "300"))
     signature_nonce_ttl_seconds: int = int(os.getenv("SIGNATURE_NONCE_TTL_SECONDS", "600"))
 
