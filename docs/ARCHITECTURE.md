@@ -149,6 +149,7 @@ Current baseline controls available in code:
 - Optional developer API key checks.
 - In-memory per-IP throttling.
 - Signed transaction policy-check request verification (HMAC + nonce + skew controls).
+- Signature algorithm negotiation headers and optional hybrid companion signature mode.
 
 These controls provide a minimal foundation for the target architecture and should be treated as phase-0 controls.
 
@@ -194,4 +195,3 @@ These controls provide a minimal foundation for the target architecture and shou
 - Claiming full quantum security immediately.
 - Replacing all enterprise IAM/SOC tooling with app code.
 - Assuming single-control mechanisms can satisfy high-assurance requirements.
-

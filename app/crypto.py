@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import hashlib
 import hmac
 
@@ -22,3 +23,29 @@ class RequestSignatureVerifier:
     def verify(self, payload: str, provided_signature: str) -> bool:
         expected = self.create_signature(payload)
         return hmac.compare_digest(expected, provided_signature)
+
+
+class MockPQCSignatureVerifier:
+    """
+    Placeholder for PQC-style verification contract.
+    This keeps the request signature API stable for future OQS integration.
+    """
+
+    def __init__(self, secret: str) -> None:
+        self.secret = secret.encode("utf-8")
+
+    def create_signature(self, payload: str) -> str:
+        digest = hashlib.sha3_512(self.secret + b"|" + payload.encode("utf-8")).hexdigest()
+        return digest
+
+    def verify(self, payload: str, provided_signature: str) -> bool:
+        expected = self.create_signature(payload)
+        return hmac.compare_digest(expected, provided_signature)
+
+
+@dataclass(frozen=True)
+class SignatureVerifierSuite:
+    primary_alg: str
+    primary_verifier: RequestSignatureVerifier | MockPQCSignatureVerifier
+    secondary_alg: str | None = None
+    secondary_verifier: RequestSignatureVerifier | MockPQCSignatureVerifier | None = None

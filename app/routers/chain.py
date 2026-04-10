@@ -60,6 +60,8 @@ def tx_policy_check(
     x_aoxc_timestamp: str | None = Header(default=None),
     x_aoxc_nonce: str | None = Header(default=None),
     x_aoxc_signature: str | None = Header(default=None),
+    x_aoxc_signature_alg: str | None = Header(default=None),
+    x_aoxc_signature_pq: str | None = Header(default=None),
 ) -> TxPolicyCheckResponse:
     enforce_rate_limit(request)
     session = enforce_session_token(authorization)
@@ -71,6 +73,8 @@ def tx_policy_check(
         timestamp_header=x_aoxc_timestamp,
         nonce_header=x_aoxc_nonce,
         signature_header=x_aoxc_signature,
+        signature_alg_header=x_aoxc_signature_alg,
+        signature_pq_header=x_aoxc_signature_pq,
     )
 
     reasons: list[str] = []

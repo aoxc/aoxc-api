@@ -7,7 +7,7 @@ import time
 from fastapi import HTTPException, status
 
 from app.config import settings
-from app.crypto import RequestSignatureVerifier
+from app.crypto import MockPQCSignatureVerifier, RequestSignatureVerifier, SignatureVerifierSuite
 
 _REQUEST_WINDOW = 60
 _request_buckets: dict[str, deque[float]] = defaultdict(deque)
@@ -57,6 +57,8 @@ def enforce_tx_request_signature(
     timestamp_header: str | None,
     nonce_header: str | None,
     signature_header: str | None,
+    signature_alg_header: str | None = None,
+    signature_pq_header: str | None = None,
 ) -> None:
     if not settings.require_request_signature:
         return
@@ -99,12 +101,31 @@ def enforce_tx_request_signature(
         f"{from_address.lower()}|{to_address.lower()}|{amount:.8f}|"
         f"{asset.upper()}|{timestamp_header}|{nonce_header}"
     )
-    verifier = RequestSignatureVerifier(settings.request_signing_key)
-    if not verifier.verify(canonical_payload, signature_header):
+    requested_alg = (signature_alg_header or settings.request_signature_primary_alg).strip().lower()
+    suite = _build_signature_verifier_suite(requested_alg)
+
+    if not suite.primary_verifier.verify(canonical_payload, signature_header):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid request signature.",
         )
+
+    if settings.request_signature_require_hybrid:
+        if not signature_pq_header:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Hybrid mode enabled: missing PQ companion signature header.",
+            )
+        if not suite.secondary_verifier or not suite.secondary_alg:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Hybrid signature verifier is not configured.",
+            )
+        if not suite.secondary_verifier.verify(canonical_payload, signature_pq_header):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid PQ companion signature.",
+            )
 
     _seen_nonces[nonce_header] = now + settings.signature_nonce_ttl_seconds
 
@@ -113,3 +134,39 @@ def _cleanup_seen_nonces(now: int) -> None:
     expired = [nonce for nonce, expires in _seen_nonces.items() if now >= expires]
     for nonce in expired:
         _seen_nonces.pop(nonce, None)
+
+
+def _build_signature_verifier_suite(requested_alg: str) -> SignatureVerifierSuite:
+    if requested_alg not in settings.request_signature_allowed_algs:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Signature algorithm '{requested_alg}' is not allowed.",
+        )
+
+    if requested_alg == "hmac-sha256":
+        primary = RequestSignatureVerifier(settings.request_signing_key)
+    elif requested_alg == "mock-pqc-dilithium2":
+        primary = MockPQCSignatureVerifier(settings.request_signing_key)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Unsupported signature algorithm '{requested_alg}'.",
+        )
+
+    secondary_verifier = None
+    secondary_alg = None
+    if settings.request_signature_require_hybrid:
+        if not settings.request_signing_pq_key:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Hybrid mode enabled but REQUEST_SIGNING_PQ_KEY is not configured.",
+            )
+        secondary_alg = "mock-pqc-dilithium2"
+        secondary_verifier = MockPQCSignatureVerifier(settings.request_signing_pq_key)
+
+    return SignatureVerifierSuite(
+        primary_alg=requested_alg,
+        primary_verifier=primary,
+        secondary_alg=secondary_alg,
+        secondary_verifier=secondary_verifier,
+    )
