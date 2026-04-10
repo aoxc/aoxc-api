@@ -88,9 +88,7 @@ Use environment variables for deployment configuration:
 - `ENFORCE_HTTPS`
 - `REQUIRE_REQUEST_SIGNATURE`
 - `REQUEST_SIGNING_KEY`
-- `REQUEST_SIGNING_KEY_ID`
 - `REQUEST_SIGNING_PQ_KEY`
-- `REQUEST_SIGNING_PQ_KEY_ID`
 - `REQUEST_SIGNATURE_PRIMARY_ALG`
 - `REQUEST_SIGNATURE_ALLOWED_ALGS`
 - `REQUEST_SIGNATURE_REQUIRE_HYBRID`
@@ -103,10 +101,8 @@ For signed transaction policy requests (`REQUIRE_REQUEST_SIGNATURE=true`), clien
 - `X-AOXC-Nonce`: unique request nonce
 - `X-AOXC-Signature`: HMAC-SHA256 over
   `from_address|to_address|amount(8dp)|asset|timestamp|nonce`
-- `X-AOXC-Signature-Alg` (optional, default from server policy): e.g. `hmac-sha256` or `mock-pqc-dilithium2` *(transition placeholder)*
+- `X-AOXC-Signature-Alg` (optional, default from server policy): e.g. `hmac-sha256` or `mock-pqc-dilithium2`
 - `X-AOXC-Signature-Pq` (required only when `REQUEST_SIGNATURE_REQUIRE_HYBRID=true`)
-- `X-AOXC-Key-Id` (optional): must match `REQUEST_SIGNING_KEY_ID` when present
-- `X-AOXC-Pq-Key-Id` (required in hybrid mode): must match `REQUEST_SIGNING_PQ_KEY_ID`
 
 ## 8) Important Security Positioning
 

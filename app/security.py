@@ -7,7 +7,7 @@ import time
 from fastapi import HTTPException, status
 
 from app.config import settings
-from app.crypto import SUPPORTED_SIGNATURE_ALGORITHMS, SignatureVerifierSuite, build_verifier
+from app.crypto import MockPQCSignatureVerifier, RequestSignatureVerifier, SignatureVerifierSuite
 
 _REQUEST_WINDOW = 60
 _request_buckets: dict[str, deque[float]] = defaultdict(deque)
@@ -59,8 +59,6 @@ def enforce_tx_request_signature(
     signature_header: str | None,
     signature_alg_header: str | None = None,
     signature_pq_header: str | None = None,
-    key_id_header: str | None = None,
-    pq_key_id_header: str | None = None,
 ) -> None:
     if not settings.require_request_signature:
         return
@@ -104,11 +102,6 @@ def enforce_tx_request_signature(
         f"{asset.upper()}|{timestamp_header}|{nonce_header}"
     )
     requested_alg = (signature_alg_header or settings.request_signature_primary_alg).strip().lower()
-    if key_id_header and key_id_header != settings.request_signing_key_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid signature key id.",
-        )
     suite = _build_signature_verifier_suite(requested_alg)
 
     if not suite.primary_verifier.verify(canonical_payload, signature_header):
@@ -122,16 +115,6 @@ def enforce_tx_request_signature(
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Hybrid mode enabled: missing PQ companion signature header.",
-            )
-        if not pq_key_id_header:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Hybrid mode enabled: missing PQ companion key id header.",
-            )
-        if pq_key_id_header != settings.request_signing_pq_key_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid PQ companion key id.",
             )
         if not suite.secondary_verifier or not suite.secondary_alg:
             raise HTTPException(
@@ -160,12 +143,15 @@ def _build_signature_verifier_suite(requested_alg: str) -> SignatureVerifierSuit
             detail=f"Signature algorithm '{requested_alg}' is not allowed.",
         )
 
-    if requested_alg not in SUPPORTED_SIGNATURE_ALGORITHMS:
+    if requested_alg == "hmac-sha256":
+        primary = RequestSignatureVerifier(settings.request_signing_key)
+    elif requested_alg == "mock-pqc-dilithium2":
+        primary = MockPQCSignatureVerifier(settings.request_signing_key)
+    else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Unsupported signature algorithm '{requested_alg}'.",
         )
-    primary = build_verifier(requested_alg, settings.request_signing_key)
 
     secondary_verifier = None
     secondary_alg = None
@@ -176,7 +162,7 @@ def _build_signature_verifier_suite(requested_alg: str) -> SignatureVerifierSuit
                 detail="Hybrid mode enabled but REQUEST_SIGNING_PQ_KEY is not configured.",
             )
         secondary_alg = "mock-pqc-dilithium2"
-        secondary_verifier = build_verifier(secondary_alg, settings.request_signing_pq_key)
+        secondary_verifier = MockPQCSignatureVerifier(settings.request_signing_pq_key)
 
     return SignatureVerifierSuite(
         primary_alg=requested_alg,
