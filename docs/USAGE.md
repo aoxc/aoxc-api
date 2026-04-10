@@ -2,9 +2,14 @@
 
 ## ⚠️ Experimental Program Status
 
-AOXC API is currently in an active build phase and should be categorized as an **experimental integration platform**.
+AOXC API is in an active build phase and should be categorized as an **experimental integration platform**.
 
-Do not onboard this service into high-risk production domains (regulated financial workflows, critical infrastructure controls, or irreversible transaction automation) until all production hardening controls are complete.
+Do not onboard this service into high-risk production domains (regulated financial workflows, critical infrastructure controls, or irreversible transaction automation) until hardening controls are complete.
+
+For target architecture and control model details:
+
+- `docs/ARCHITECTURE.md`
+- `docs/SECURITY_MODEL.md`
 
 ---
 
@@ -17,7 +22,7 @@ Recommended lifecycle:
 1. Validate in isolated development and staging environments.
 2. Add identity, policy, and secrets controls using enterprise infrastructure.
 3. Introduce complete telemetry and security monitoring.
-4. Complete architecture and penetration reviews before production authorization.
+4. Complete architecture, threat, and penetration reviews before production authorization.
 
 ---
 
@@ -31,12 +36,17 @@ Use environment variables as the single source of runtime behavior.
 | `ALLOWED_ORIGINS` | CORS allow-list | Restrict to approved domains only |
 | `REQUIRE_API_KEY` | Enables API key auth on developer endpoints | Set `true` outside local-only development |
 | `API_KEY` | Shared key for protected developer routes | Store in secret manager; rotate periodically |
-| `REQUESTS_PER_MINUTE` | In-memory per-IP throttling threshold | Treat as temporary control; replace with distributed limiter |
-| `ENFORCE_HTTPS` | Enables Strict-Transport-Security header | Keep `true` in environments served over TLS |
+| `REQUESTS_PER_MINUTE` | In-memory per-IP throttling threshold | Temporary control only; replace with distributed limiter |
+| `ENFORCE_HTTPS` | Enables Strict-Transport-Security header | Keep `true` where TLS termination is correctly configured |
 | `REQUIRE_REQUEST_SIGNATURE` | Enforces signed tx policy-check requests | Set `true` in staging/prod for anti-tamper + anti-replay |
 | `REQUEST_SIGNING_KEY` | Shared HMAC key for tx request signatures | Store in KMS/secret manager and rotate |
 | `SIGNATURE_MAX_SKEW_SECONDS` | Max tolerated client/server clock drift | Keep low (e.g., 120-300s) and monitor rejects |
 | `SIGNATURE_NONCE_TTL_SECONDS` | Replay cache lifetime for used nonces | Tune to request latency + retry window |
+| `AOXC_RPC_URL` | AOXChain JSON-RPC endpoint URL | Required for `/api/v1/chain/rpc` and active chain probing |
+| `AOXC_CHAIN_ID` | Logical chain profile id | Keep environment-specific (`aoxc-testnet`, `aoxc-mainnet`) |
+| `AOXC_SUPPORTED_ASSETS` | Comma-separated allowlist for tx policy checks | Restrict to approved settlement assets |
+| `AOXC_MAX_TX_AMOUNT` | Maximum allowed tx amount for policy allow | Set risk-based hard ceiling |
+| `AOXC_ALLOWED_RPC_METHODS` | Comma-separated JSON-RPC method allowlist | Keep minimal; deny-by-default |
 
 ---
 
@@ -63,6 +73,7 @@ Use environment variables as the single source of runtime behavior.
 - `POST /api/v1/auth/verify`
 - `GET /api/v1/chain/status`
 - `POST /api/v1/chain/tx/policy-check`
+- `POST /api/v1/chain/rpc`
 
 When `REQUIRE_API_KEY=true`, developer routes require:
 
@@ -76,54 +87,67 @@ If `REQUIRE_REQUEST_SIGNATURE=true`, also send:
 
 - `X-AOXC-Timestamp: <unix-seconds>`
 - `X-AOXC-Nonce: <unique-nonce>`
-- `X-AOXC-Signature: <hmac-sha256>` where signed string is:
+- `X-AOXC-Signature: <hmac-sha256>` over canonical value:
   `from_address|to_address|amount(8dp)|asset|timestamp|nonce`
 
 ---
 
-## 4. Security Control Summary
+## 4. Deployment Recommendations
 
-Current controls:
+### Minimum staging profile
 
-- Security response headers (CSP, frame protection, content-type protections).
-- In-memory rate limiting by client IP.
-- Optional API key enforcement for developer endpoints.
-- Explicit experimental warning response header (`X-AOXC-Status: experimental`).
+- Enable `REQUIRE_API_KEY=true`.
+- Enable `REQUIRE_REQUEST_SIGNATURE=true`.
+- Use secret manager-backed `API_KEY` and `REQUEST_SIGNING_KEY`.
+- Route all logs to centralized monitoring.
 
-Current limitations:
+### Minimum production profile
 
-- Local process memory is used for throttling state.
-- Not horizontally consistent across replicas.
-- No built-in KMS-backed secret lifecycle.
-- No post-quantum cryptographic implementation.
-
----
-
-## 5. Quantum-Readiness Statement
-
-AOXC API currently uses conventional web/API security controls and should be considered **quantum-transition unready**.
-
-To align with quantum-resilient strategy, plan these tracks:
-
-1. Cryptographic inventory and algorithm agility framework.
-2. Controlled migration design for post-quantum signatures/KEMs.
-3. Hybrid mode validation during transition periods.
-4. Governance sign-off based on formal security assurance.
+- Keep all staging controls enabled.
+- Replace in-memory limiter with distributed limiter.
+- Enable immutable security event retention.
+- Use centrally managed identity and policy systems.
+- Enforce change-control for security settings.
 
 ---
 
-## 6. Production Hardening Roadmap
+## 5. Validation and Operational Checks
 
-1. Replace in-memory controls with shared infrastructure (Redis, gateway policy engine).
-2. Externalize authentication and authorization via centralized identity platform.
+Recommended checks before each release:
+
+1. Endpoint and auth regression tests pass.
+2. Signature verification checks pass with valid/invalid test vectors.
+3. Rate-limiting behavior matches expected thresholds.
+4. Secret rotation rehearsal completed in non-production.
+5. Rollback runbook tested for latest deployment artifacts.
+
+---
+
+## 6. Quantum-Transition Positioning
+
+Current runtime controls are not post-quantum complete. Treat the service as **quantum-transition preparatory**.
+
+To progress:
+
+1. Build cryptographic inventory.
+2. Add cryptographic abstraction and algorithm policy config.
+3. Pilot hybrid classical + PQC modes where integration allows.
+4. Add staged cutover and rollback plans.
+
+---
+
+## 7. Production Hardening Roadmap
+
+1. Replace local in-memory controls with shared infrastructure (e.g., Redis + gateway policy engine).
+2. Externalize authentication/authorization via centralized identity platform.
 3. Add OpenTelemetry traces + immutable security audit logs.
 4. Enforce key rotation, revocation, and incident break-glass procedures.
 5. Add CI/CD quality gates: SAST, DAST, dependency, container, and IaC scanning.
-6. Implement formal release governance with rollback playbooks.
+6. Implement formal release governance with pre-approved rollback playbooks.
 
 ---
 
-## 7. Validation Commands
+## 8. Validation Commands
 
 ```bash
 make test
@@ -132,3 +156,4 @@ make test
 ```bash
 docker compose up --build
 ```
+
