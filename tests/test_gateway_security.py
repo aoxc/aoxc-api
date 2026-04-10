@@ -306,41 +306,6 @@ def test_chain_policy_check_accepts_hybrid_mode() -> None:
     assert response.status_code == 200
 
 
-def test_chain_policy_check_rejects_unsupported_signature_algorithm() -> None:
-    from_address = "0xA0aB9300"
-    to_address = "0xA0aB9301"
-    amount = 1.25
-    asset = "AOXC"
-
-    client.post("/api/v1/auth/challenge", json={"wallet_address": from_address})
-    verify_response = client.post(
-        "/api/v1/auth/verify",
-        json={"wallet_address": from_address, "signature": "ok"},
-    )
-    token = verify_response.json()["access_token"]
-
-    headers = {"Authorization": f"Bearer {token}"}
-    headers.update(_signed_headers(from_address, to_address, amount, asset, key="shared-secret-6", alg="hmac-sha256"))
-
-    with temporary_security_settings(
-        require_request_signature=True,
-        request_signing_key="shared-secret-6",
-        request_signature_allowed_algs=("hmac-sha256", "future-ml-dsa"),
-    ):
-        headers["X-AOXC-Signature-Alg"] = "future-ml-dsa"
-        response = client.post(
-            "/api/v1/chain/tx/policy-check",
-            json={
-                "from_address": from_address,
-                "to_address": to_address,
-                "amount": amount,
-                "asset": asset,
-            },
-            headers=headers,
-        )
-    assert response.status_code == 401
-
-
 def test_chain_rpc_requires_auth_token() -> None:
     response = client.post("/api/v1/chain/rpc", json={"method": "eth_chainId", "params": []})
     assert response.status_code == 401

@@ -7,7 +7,7 @@ import time
 from fastapi import HTTPException, status
 
 from app.config import settings
-from app.crypto import SUPPORTED_SIGNATURE_ALGORITHMS, SignatureVerifierSuite, build_verifier
+from app.crypto import MockPQCSignatureVerifier, RequestSignatureVerifier, SignatureVerifierSuite
 
 _REQUEST_WINDOW = 60
 _request_buckets: dict[str, deque[float]] = defaultdict(deque)
@@ -143,12 +143,15 @@ def _build_signature_verifier_suite(requested_alg: str) -> SignatureVerifierSuit
             detail=f"Signature algorithm '{requested_alg}' is not allowed.",
         )
 
-    if requested_alg not in SUPPORTED_SIGNATURE_ALGORITHMS:
+    if requested_alg == "hmac-sha256":
+        primary = RequestSignatureVerifier(settings.request_signing_key)
+    elif requested_alg == "mock-pqc-dilithium2":
+        primary = MockPQCSignatureVerifier(settings.request_signing_key)
+    else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Unsupported signature algorithm '{requested_alg}'.",
         )
-    primary = build_verifier(requested_alg, settings.request_signing_key)
 
     secondary_verifier = None
     secondary_alg = None
@@ -159,7 +162,7 @@ def _build_signature_verifier_suite(requested_alg: str) -> SignatureVerifierSuit
                 detail="Hybrid mode enabled but REQUEST_SIGNING_PQ_KEY is not configured.",
             )
         secondary_alg = "mock-pqc-dilithium2"
-        secondary_verifier = build_verifier(secondary_alg, settings.request_signing_pq_key)
+        secondary_verifier = MockPQCSignatureVerifier(settings.request_signing_pq_key)
 
     return SignatureVerifierSuite(
         primary_alg=requested_alg,

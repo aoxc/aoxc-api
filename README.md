@@ -101,7 +101,7 @@ For signed transaction policy requests (`REQUIRE_REQUEST_SIGNATURE=true`), clien
 - `X-AOXC-Nonce`: unique request nonce
 - `X-AOXC-Signature`: HMAC-SHA256 over
   `from_address|to_address|amount(8dp)|asset|timestamp|nonce`
-- `X-AOXC-Signature-Alg` (optional, default from server policy): e.g. `hmac-sha256` or `mock-pqc-dilithium2` *(transition placeholder)*
+- `X-AOXC-Signature-Alg` (optional, default from server policy): e.g. `hmac-sha256` or `mock-pqc-dilithium2`
 - `X-AOXC-Signature-Pq` (required only when `REQUEST_SIGNATURE_REQUIRE_HYBRID=true`)
 
 ## 8) Important Security Positioning

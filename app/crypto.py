@@ -58,15 +58,6 @@ class MockPQCSignatureVerifier:
 @dataclass(frozen=True)
 class SignatureVerifierSuite:
     primary_alg: str
-    primary_verifier: SignatureVerifier
+    primary_verifier: RequestSignatureVerifier | MockPQCSignatureVerifier
     secondary_alg: str | None = None
-    secondary_verifier: SignatureVerifier | None = None
-
-
-def build_verifier(algorithm: str, secret: str) -> SignatureVerifier:
-    normalized = algorithm.strip().lower()
-    if normalized == "hmac-sha256":
-        return RequestSignatureVerifier(secret)
-    if normalized == "mock-pqc-dilithium2":
-        return MockPQCSignatureVerifier(secret)
-    raise ValueError(f"Unsupported signature algorithm '{algorithm}'.")
+    secondary_verifier: RequestSignatureVerifier | MockPQCSignatureVerifier | None = None
