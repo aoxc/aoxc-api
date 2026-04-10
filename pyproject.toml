@@ -1,7 +1,7 @@
 [project]
 name = "aoxc-api"
 version = "0.2.0"
-description = "AOXChain uyumlu gelistirici ve kullanici API servisi"
+description = "AOXChain-compatible developer and user API service"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
