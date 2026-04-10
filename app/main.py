@@ -9,7 +9,10 @@ from app.schemas import HealthResponse
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="AOXChain uyumlu kullanici ve gelistirici API servisi",
+    description=(
+        "AOXChain-aligned user and developer API service. "
+        "Warning: This build is experimental and under active development."
+    ),
 )
 
 app.add_middleware(SecurityHeadersMiddleware)

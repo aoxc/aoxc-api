@@ -8,6 +8,7 @@ class HealthResponse(BaseModel):
     service: str
     version: str
     environment: str
+    warning: str = Field(default="Experimental build: not production-ready.")
 
 
 class UserProfile(BaseModel):

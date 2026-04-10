@@ -12,6 +12,7 @@ def test_health() -> None:
     assert data["status"] == "ok"
     assert data["service"] == "aoxc-api"
     assert "environment" in data
+    assert data["warning"] == "Experimental build: not production-ready."
 
 
 def test_user_roadmap() -> None:
@@ -34,3 +35,4 @@ def test_security_headers_exist() -> None:
     response = client.get("/health")
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["x-aoxc-status"] == "experimental"

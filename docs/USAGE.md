@@ -1,72 +1,111 @@
-# AOXC API Usage Guide (Experimental)
+# AOXC API Enterprise Usage Guide
 
-## 1. Operational Positioning
+## ⚠️ Experimental Program Status
 
-AOXC API should be evaluated as an experimental integration layer, not a final production security platform.
+AOXC API is currently in an active build phase and should be categorized as an **experimental integration platform**.
 
-Recommended usage pattern:
+Do not onboard this service into high-risk production domains (regulated financial workflows, critical infrastructure controls, or irreversible transaction automation) until all production hardening controls are complete.
 
-- Start in isolated non-production environments.
-- Integrate centralized secret management.
-- Add observability, SIEM pipelines, and external WAF/API gateway controls.
-- Run security testing (SAST/DAST/dependency scans/penetration tests).
+---
 
-## 2. Environment Configuration
+## 1. Operating Model
 
-Use `.env.example` as baseline and override with deployment-specific secrets.
+Use AOXC API as a controlled gateway layer between AOXChain-aligned services and client applications.
 
-Key controls:
+Recommended lifecycle:
 
-- `REQUIRE_API_KEY`: Enforces API key auth for protected resources.
-- `REQUIRE_SIGNED_REQUESTS`: Enforces request signatures.
-- `REQUEST_SIGNING_SECRET`: Secret key used for HMAC signature verification.
-- `REQUEST_MAX_AGE_SECONDS`: Rejects stale signed requests.
-- `NONCE_CACHE_TTL_SECONDS`: Nonce replay cache retention period.
-- `REQUESTS_PER_MINUTE`: Per-IP rate limiter threshold.
+1. Validate in isolated development and staging environments.
+2. Add identity, policy, and secrets controls using enterprise infrastructure.
+3. Introduce complete telemetry and security monitoring.
+4. Complete architecture and penetration reviews before production authorization.
 
-## 3. Signature Protocol
+---
 
-Expected headers:
+## 2. Environment Configuration Baseline
 
-- `x-sign-ts`: Unix timestamp (seconds)
-- `x-sign-nonce`: Unique nonce per request
-- `x-signature`: HMAC-SHA256 hex digest over payload
+Use environment variables as the single source of runtime behavior.
 
-Payload format:
+| Variable | Purpose | Recommended Enterprise Practice |
+|---|---|---|
+| `APP_ENV` | Environment label (`dev`, `staging`, `prod`) | Bind to deployment profile and change control workflows |
+| `ALLOWED_ORIGINS` | CORS allow-list | Restrict to approved domains only |
+| `REQUIRE_API_KEY` | Enables API key auth on developer endpoints | Set `true` outside local-only development |
+| `API_KEY` | Shared key for protected developer routes | Store in secret manager; rotate periodically |
+| `REQUESTS_PER_MINUTE` | In-memory per-IP throttling threshold | Treat as temporary control; replace with distributed limiter |
 
-`{METHOD}|{PATH}|{TIMESTAMP}|{NONCE}`
+---
 
-Example payload:
+## 3. Endpoint Access Surfaces
 
-`GET|/api/v1/developer/compatibility|1710000000|f6a8...`
+### Public system surface
 
-## 4. API Credential Protocol
+- `GET /health`
 
-Expected headers for protected developer endpoints:
+### User surface
 
-- `x-key-id`: key identifier
-- `x-api-key`: secret value bound to key id
+- `GET /api/v1/user/roadmap`
+- `GET /api/v1/user/features`
+- `GET /api/v1/user/profiles`
 
-Authorization path:
+### Developer surface
 
-1. Validate key id exists.
-2. Compare secret using constant-time comparison.
-3. Resolve principal scopes.
-4. Enforce required scope (e.g., `developer:read`).
+- `GET /api/v1/developer/tools`
+- `GET /api/v1/developer/compatibility`
 
-## 5. Security Caveats
+When `REQUIRE_API_KEY=true`, developer routes require:
 
-- HMAC-SHA256 is practical today but not post-quantum resistant.
-- In-memory nonce cache is single-instance scoped (not distributed).
-- In-memory rate limiting is not globally consistent across replicas.
+- `x-api-key: <configured-secret>`
 
-For production, move these controls to shared infrastructure (Redis, API gateway, service mesh policy).
+---
 
-## 6. Suggested Production Hardening Roadmap
+## 4. Security Control Summary
 
-1. Replace static key map with KMS-backed key registry.
-2. Replace local nonce cache/rate limiter with Redis.
-3. Add mTLS between trusted services.
-4. Add formal audit logs and immutable event storage.
-5. Add OpenTelemetry traces and security alerting.
-6. Integrate key rotation and break-glass controls.
+Current controls:
+
+- Security response headers (CSP, frame protection, content-type protections).
+- In-memory rate limiting by client IP.
+- Optional API key enforcement for developer endpoints.
+- Explicit experimental warning response header (`X-AOXC-Status: experimental`).
+
+Current limitations:
+
+- Local process memory is used for throttling state.
+- Not horizontally consistent across replicas.
+- No built-in KMS-backed secret lifecycle.
+- No post-quantum cryptographic implementation.
+
+---
+
+## 5. Quantum-Readiness Statement
+
+AOXC API currently uses conventional web/API security controls and should be considered **quantum-transition unready**.
+
+To align with quantum-resilient strategy, plan these tracks:
+
+1. Cryptographic inventory and algorithm agility framework.
+2. Controlled migration design for post-quantum signatures/KEMs.
+3. Hybrid mode validation during transition periods.
+4. Governance sign-off based on formal security assurance.
+
+---
+
+## 6. Production Hardening Roadmap
+
+1. Replace in-memory controls with shared infrastructure (Redis, gateway policy engine).
+2. Externalize authentication and authorization via centralized identity platform.
+3. Add OpenTelemetry traces + immutable security audit logs.
+4. Enforce key rotation, revocation, and incident break-glass procedures.
+5. Add CI/CD quality gates: SAST, DAST, dependency, container, and IaC scanning.
+6. Implement formal release governance with rollback playbooks.
+
+---
+
+## 7. Validation Commands
+
+```bash
+make test
+```
+
+```bash
+docker compose up --build
+```
