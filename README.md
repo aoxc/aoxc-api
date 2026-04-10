@@ -1,32 +1,42 @@
-# aoxc-api
+# AOXC API
 
-AOXChain/XChain yol haritasina uyumlu, **kullanici** ve **gelistirici** odakli bir REST API.
+A FastAPI-based integration service designed for AOXChain ecosystem clients and developer tooling.
 
-> Bu proje **Python (FastAPI)** ile yazildi. NPM/Node degil.
+> ⚠️ **Experimental Build Notice**  
+> This project is currently under active construction and should be treated as **experimental software**. Do not classify this codebase as production-grade without completing the hardening, validation, and governance controls listed in the documentation.
 
-## Neden Python/FastAPI?
+## 1) Product Scope
 
-- Hizli API gelistirme ve tip guvenli contract (Pydantic)
-- OpenAPI/Swagger dokumantasyonu otomatik uretilir
-- Docker ile her makinede ayni calisma ortami
+AOXC API provides two access surfaces:
 
-## Mimari
+- **User APIs** for roadmap visibility and ecosystem-facing data consumption.
+- **Developer APIs** for compatibility and toolchain metadata (optionally protected via API key).
 
-- `app/main.py`: app bootstrap, CORS, security headers, router baglama
-- `app/config.py`: tum runtime ayarlari (`ENV` tabanli)
-- `app/security.py`: rate limit + developer endpoint API key kontrolu
-- `app/routers/user.py`: son kullanici endpointleri
-- `app/routers/developer.py`: gelistirici endpointleri
-- `app/data.py`: AOXChain roadmap ve ornek payloadlar
+The service is intentionally lightweight and intended to be a foundation layer for enterprise deployments.
 
-## Guvenlik ozellikleri
+## 2) Core Capabilities
 
-- `X-Content-Type-Options`, `X-Frame-Options`, `CSP` gibi temel HTTP security header'lari
-- Basit IP bazli rate limiting (dakika bazli)
-- Gelistirici endpointleri icin opsiyonel `x-api-key` zorunlulugu
-- CORS kontrolu (`ALLOWED_ORIGINS`)
+- FastAPI application lifecycle with OpenAPI schema generation.
+- Structured response contracts through Pydantic models.
+- Basic HTTP security header middleware.
+- In-memory per-IP rate limiting.
+- Optional API key protection for developer endpoints.
+- Docker-based reproducible runtime.
 
-## Kurulum (lokal)
+## 3) Architecture Map
+
+- `app/main.py` — FastAPI initialization, middleware registration, router composition.
+- `app/config.py` — runtime configuration contract sourced from environment variables.
+- `app/middleware.py` — baseline transport-level security headers + experimental status header.
+- `app/security.py` — request throttling and developer endpoint API key checks.
+- `app/routers/user.py` — user-facing endpoints.
+- `app/routers/developer.py` — developer-facing endpoints.
+- `app/data.py` — static AOXChain roadmap and sample payload data.
+- `docs/USAGE.md` — enterprise usage and operational controls.
+
+## 4) Quick Start
+
+### Local development
 
 ```bash
 python -m venv .venv
@@ -35,15 +45,13 @@ pip install -e .[dev]
 make run
 ```
 
-## Docker ile (onerilen)
+### Docker (recommended)
 
 ```bash
 docker compose up --build
 ```
 
-Bu sekilde Python surumu fark etmeksizin her makinede ayni imajla calisir.
-
-## Endpointler
+## 5) API Endpoints
 
 - `GET /health`
 - `GET /api/v1/user/roadmap`
@@ -52,16 +60,35 @@ Bu sekilde Python surumu fark etmeksizin her makinede ayni imajla calisir.
 - `GET /api/v1/developer/tools`
 - `GET /api/v1/developer/compatibility`
 
-## Ortam degiskenleri
+## 6) Configuration
 
-`.env.example` dosyasini referans alin:
+Use environment variables for deployment configuration:
 
-- `APP_ENV=dev|staging|prod`
-- `REQUIRE_API_KEY=true` yaparsaniz developer endpointleri API key ister
-- `REQUESTS_PER_MINUTE` ile rate limit ayarlanir
+- `APP_NAME`
+- `APP_VERSION`
+- `APP_ENV`
+- `ALLOWED_ORIGINS`
+- `REQUIRE_API_KEY`
+- `API_KEY`
+- `REQUESTS_PER_MINUTE`
 
-## Test
+## 7) Experimental & Quantum Security Warning
+
+This implementation does **not** provide post-quantum cryptographic guarantees. While AOXChain strategy may evolve toward quantum-resilient controls, this repository currently includes only conventional transport and access controls.
+
+Before enterprise launch, establish:
+
+1. Centralized key and secret lifecycle management.
+2. Distributed replay/rate-control infrastructure.
+3. Cryptographic agility roadmap including post-quantum migration planning.
+4. Full observability, auditability, and incident response operations.
+
+## 8) Validation
 
 ```bash
 make test
 ```
+
+## 9) License
+
+This project is distributed under the MIT License (`LICENSE`).
