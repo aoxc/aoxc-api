@@ -3,6 +3,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import hmac
+from typing import Protocol
+
+
+SUPPORTED_SIGNATURE_ALGORITHMS: tuple[str, ...] = ("hmac-sha256", "mock-pqc-dilithium2")
+
+
+class SignatureVerifier(Protocol):
+    def create_signature(self, payload: str) -> str:
+        ...
+
+    def verify(self, payload: str, provided_signature: str) -> bool:
+        ...
 
 
 class RequestSignatureVerifier:
