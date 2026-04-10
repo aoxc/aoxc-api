@@ -4,7 +4,7 @@ import time
 from fastapi.testclient import TestClient
 
 from app.config import settings
-from app.crypto import RequestSignatureVerifier
+from app.crypto import MockPQCSignatureVerifier, RequestSignatureVerifier
 from app.main import app
 
 client = TestClient(app)
@@ -22,16 +22,29 @@ def temporary_security_settings(**kwargs):
             object.__setattr__(settings, key, value)
 
 
-def _signed_headers(from_address: str, to_address: str, amount: float, asset: str, key: str) -> dict[str, str]:
+def _signed_headers(
+    from_address: str,
+    to_address: str,
+    amount: float,
+    asset: str,
+    key: str,
+    alg: str = "hmac-sha256",
+    pq_key: str | None = None,
+) -> dict[str, str]:
     ts = str(int(time.time()))
     nonce = f"test-nonce-{time.time_ns()}"
     canonical = f"{from_address.lower()}|{to_address.lower()}|{amount:.8f}|{asset.upper()}|{ts}|{nonce}"
-    signature = RequestSignatureVerifier(key).create_signature(canonical)
-    return {
+    verifier = RequestSignatureVerifier(key) if alg == "hmac-sha256" else MockPQCSignatureVerifier(key)
+    signature = verifier.create_signature(canonical)
+    headers = {
         "X-AOXC-Timestamp": ts,
         "X-AOXC-Nonce": nonce,
         "X-AOXC-Signature": signature,
+        "X-AOXC-Signature-Alg": alg,
     }
+    if pq_key:
+        headers["X-AOXC-Signature-Pq"] = MockPQCSignatureVerifier(pq_key).create_signature(canonical)
+    return headers
 
 
 def test_auth_challenge_and_verify_issue_session_token() -> None:
@@ -212,6 +225,85 @@ def test_chain_policy_check_rejects_wallet_mismatch() -> None:
     data = response.json()
     assert data["allowed"] is False
     assert data["risk_level"] == "high"
+
+
+def test_chain_policy_check_rejects_disallowed_signature_algorithm() -> None:
+    from_address = "0xA0aB9100"
+    to_address = "0xA0aB9101"
+    amount = 1.0
+    asset = "AOXC"
+
+    client.post("/api/v1/auth/challenge", json={"wallet_address": from_address})
+    verify_response = client.post(
+        "/api/v1/auth/verify",
+        json={"wallet_address": from_address, "signature": "ok"},
+    )
+    token = verify_response.json()["access_token"]
+
+    headers = {"Authorization": f"Bearer {token}"}
+    headers.update(_signed_headers(from_address, to_address, amount, asset, key="shared-secret-4", alg="hmac-sha256"))
+
+    with temporary_security_settings(
+        require_request_signature=True,
+        request_signing_key="shared-secret-4",
+        request_signature_allowed_algs=("mock-pqc-dilithium2",),
+    ):
+        response = client.post(
+            "/api/v1/chain/tx/policy-check",
+            json={
+                "from_address": from_address,
+                "to_address": to_address,
+                "amount": amount,
+                "asset": asset,
+            },
+            headers=headers,
+        )
+    assert response.status_code == 401
+
+
+def test_chain_policy_check_accepts_hybrid_mode() -> None:
+    from_address = "0xA0aB9200"
+    to_address = "0xA0aB9201"
+    amount = 1.5
+    asset = "AOXC"
+
+    client.post("/api/v1/auth/challenge", json={"wallet_address": from_address})
+    verify_response = client.post(
+        "/api/v1/auth/verify",
+        json={"wallet_address": from_address, "signature": "ok"},
+    )
+    token = verify_response.json()["access_token"]
+
+    headers = {"Authorization": f"Bearer {token}"}
+    headers.update(
+        _signed_headers(
+            from_address,
+            to_address,
+            amount,
+            asset,
+            key="shared-secret-5",
+            alg="hmac-sha256",
+            pq_key="shared-pq-secret-5",
+        )
+    )
+
+    with temporary_security_settings(
+        require_request_signature=True,
+        request_signing_key="shared-secret-5",
+        request_signing_pq_key="shared-pq-secret-5",
+        request_signature_require_hybrid=True,
+    ):
+        response = client.post(
+            "/api/v1/chain/tx/policy-check",
+            json={
+                "from_address": from_address,
+                "to_address": to_address,
+                "amount": amount,
+                "asset": asset,
+            },
+            headers=headers,
+        )
+    assert response.status_code == 200
 
 
 def test_chain_rpc_requires_auth_token() -> None:
