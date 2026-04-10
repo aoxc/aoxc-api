@@ -91,14 +91,6 @@ Use environment variables for deployment configuration:
 - `SIGNATURE_MAX_SKEW_SECONDS`
 - `SIGNATURE_NONCE_TTL_SECONDS`
 
-AOXChain runtime integration settings:
-
-- `AOXC_RPC_URL`
-- `AOXC_CHAIN_ID`
-- `AOXC_SUPPORTED_ASSETS`
-- `AOXC_MAX_TX_AMOUNT`
-- `AOXC_ALLOWED_RPC_METHODS`
-
 For signed transaction policy requests (`REQUIRE_REQUEST_SIGNATURE=true`), clients must include:
 
 - `X-AOXC-Timestamp`: Unix epoch seconds
