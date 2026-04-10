@@ -1,4 +1,13 @@
-from app.schemas import CompatibilityReport, DeveloperTool, FeatureFlag, RoadmapMilestone, UserProfile
+from app.schemas import (
+    CompatibilityCapability,
+    CompatibilityReport,
+    CompatibilityRuntime,
+    DeveloperTool,
+    FeatureFlag,
+    FullCompatibilityReport,
+    RoadmapMilestone,
+    UserProfile,
+)
 
 ROADMAP: list[RoadmapMilestone] = [
     RoadmapMilestone(
@@ -88,4 +97,57 @@ COMPATIBILITY = CompatibilityReport(
     compatible=True,
     supported_standards=["EVM JSON-RPC", "DAO Governance API", "Wallet Sync v1"],
     notes="Roadmap-focused features are enabled gradually.",
+)
+
+FULL_COMPATIBILITY = FullCompatibilityReport(
+    network="AOXChain",
+    compatible=True,
+    runtime=CompatibilityRuntime(
+        api_version="v1",
+        compatibility_version="2026.04",
+        chain_id="aoxc-1",
+        rpc_transport="HTTP JSON-RPC 2.0",
+        signature_modes=["hmac-sha256", "mock-pqc-dilithium2", "hybrid"],
+    ),
+    standards=[
+        "EVM JSON-RPC",
+        "DAO Governance API",
+        "Wallet Sync v1",
+        "Challenge-Response Wallet Authentication",
+        "Signed Transaction Policy Requests",
+    ],
+    capabilities=[
+        CompatibilityCapability(
+            key="auth.wallet_challenge_verify",
+            status="active",
+            description="Nonce challenge + signature verification session flow.",
+        ),
+        CompatibilityCapability(
+            key="chain.tx_policy_check",
+            status="active",
+            description="Risk scoring + required controls for outgoing transactions.",
+        ),
+        CompatibilityCapability(
+            key="chain.rpc_proxy",
+            status="active",
+            description="Controlled RPC method passthrough with transport security headers.",
+        ),
+        CompatibilityCapability(
+            key="developer.compatibility_profile",
+            status="active",
+            description="Machine-readable compatibility contract for AOXChain integrations.",
+        ),
+    ],
+    required_headers=[
+        "X-AOXC-Timestamp",
+        "X-AOXC-Nonce",
+        "X-AOXC-Signature",
+        "X-AOXC-Signature-Alg (optional)",
+        "X-AOXC-Signature-Pq (hybrid mode only)",
+    ],
+    sample_rpc_methods=["eth_chainId", "eth_blockNumber", "aoxc_getPolicyState"],
+    notes=(
+        "This report is designed for full AOXChain integration checks. "
+        "Final production posture depends on deployment configuration and key management."
+    ),
 )

@@ -68,6 +68,7 @@ docker compose up --build
 - `GET /api/v1/user/profiles`
 - `GET /api/v1/developer/tools`
 - `GET /api/v1/developer/compatibility`
+- `GET /api/v1/developer/compatibility/full`
 - `POST /api/v1/auth/challenge`
 - `POST /api/v1/auth/verify`
 - `GET /api/v1/chain/status`
