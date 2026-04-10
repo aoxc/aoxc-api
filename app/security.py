@@ -91,7 +91,8 @@ def enforce_tx_request_signature(
         )
 
     _cleanup_seen_nonces(now)
-    if nonce_header in _seen_nonces:
+    nonce_scope_key = f"{from_address.lower()}|{nonce_header}"
+    if nonce_scope_key in _seen_nonces:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Replay detected for request nonce.",
